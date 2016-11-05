@@ -1,8 +1,11 @@
+// initial design by 
+
+// modified by Bertrand MAUBERT oct 2016 (add padding space, add optionnal connectors).
 
 // battery diameter (AA-14.5, AAA-10.6 123A-16.8 CR2-15.5)
 _diameter = 14.5;
 
-// height of the tray
+// height of the tray;
 _height = 8; // [1:80]
 
 // number of battery clusters across
@@ -20,6 +23,20 @@ _base = 0.5;
 // radius of corner rounding
 _cornerRounding = 4.0;
 
+// added by BM 
+// extra space (add padding along the edges)
+_padding = 2;
+
+// dimensions of connector
+WITH_CONNECTOR = true ;
+_con_x = 7; 
+_con_y = 2.5;
+_con_z = 8;
+_offset = 0.2; // spacing for the connector
+
+
+half_depth = _padding + ((2 * _diameter + _spacing) * _rows + _spacing*2)/2;
+half_width = _padding + ((2 * _diameter + _spacing) * _columns + _spacing*2)/2;
 
 module batteryQuad(diameter, height) {
 	angle = 35;
@@ -64,7 +81,11 @@ module batteryQuad(diameter, height) {
 	}
 }
 
-module makeTray(diameter, height, rows, columns, spacing, base, rounding) {
+
+
+
+
+module makeTray(diameter, height, rows, columns, spacing, base, rounding, padding) {
 	eps = 0.1;
 	rounding = min(rounding, diameter/2 + spacing*2);
 	quadSize = 2 * diameter;
@@ -74,12 +95,16 @@ module makeTray(diameter, height, rows, columns, spacing, base, rounding) {
 	ystart = -depth/2 + spacing*1.5 + quadSize/2;
 
 	difference() {
+        // main block
 		hull()
-		for (x=[-width/2 + rounding, width/2 - rounding])
-		for (y=[-depth/2 + rounding, depth/2 - rounding]) {
+		for (x=[-padding - width/2 + rounding, 
+            + padding + width/2 - rounding])
+		for (y=[-padding - depth/2 + rounding, 
+            + padding + depth/2 - rounding]) {
 			translate([x,y])
 			cylinder(r=rounding, h=height);
 		}
+        // holes.
 		translate([0,0,height/2 + base]) {
 			for (x=[0:1:columns-1])
 			for (y=[0:1:rows-1]) {
@@ -89,7 +114,49 @@ module makeTray(diameter, height, rows, columns, spacing, base, rounding) {
 				}
 			}
 		}
-	}
+        // Spaces for connectors
+        if  (WITH_CONNECTOR) 
+            spacesForConnectors();
+	    }
 }
 
-makeTray(_diameter, _height, _rows, _columns, _spacing, _base, _cornerRounding, $fn=90);
+module connector2D(){
+        polygon([
+    [-_con_x,_con_y], [_con_x, _con_y], [_con_x-_con_y,0],  
+    [_con_x, -_con_y], [-_con_x, -_con_y],[-_con_x+_con_y , 0]]);
+    }
+module connector(){
+    linear_extrude(height=_con_z)
+    connector2D();
+    }
+module spaceForConnector(){
+    translate([0,0,-0.1])
+    linear_extrude(height=_con_z + 0.5)
+    offset(delta = _offset){
+    connector2D();
+   }
+}
+    
+CON_PATTERN = "middle" ;
+module spacesForConnectors(){
+    // draw several spaces for connectors.
+    if (CON_PATTERN == "middle"){    
+    for ( y = [ - half_depth, half_depth]){
+        translate([0,y,0])
+        spaceForConnector();
+    }
+    for ( x = [ - half_width, half_width]){
+        translate([x,0,0])
+        rotate([0,0,90])
+        spaceForConnector();
+    }
+    }
+}
+
+
+// Main
+makeTray(_diameter, _height, _rows, _columns, _spacing, _base, _cornerRounding, _padding, $fn=90);
+
+if  (WITH_CONNECTOR) 
+    translate([0,half_depth + 10,0])
+    connector();
