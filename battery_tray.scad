@@ -6,13 +6,13 @@
 _diameter = 14.5;
 
 // height of the tray;
-_height = 8; // [1:80]
+_height = 10; // [1:80]
 
 // number of battery clusters across
 _columns = 2; // [1:12]
 
 // number of battery clusters deep
-_rows = 1; // [1:12]
+_rows = 2; // [1:12]
 
 // padding between the clusters of batteries (also affects padding along the edges)
 _spacing = 1.2;
@@ -31,9 +31,12 @@ _padding = 2;
 WITH_CONNECTOR = true ;
 _con_x = 7; 
 _con_y = 2.5;
-_con_z = 8;
+_con_z = 10;
 _offset = 0.2; // spacing for the connector
 
+// CON_PATTERN : // possible values : 
+// "middle_of_tray", "middle of quad"
+CON_PATTERN = "middle_of_tray" ; 
 
 half_depth = _padding + ((2 * _diameter + _spacing) * _rows + _spacing*2)/2;
 half_width = _padding + ((2 * _diameter + _spacing) * _columns + _spacing*2)/2;
@@ -137,10 +140,11 @@ module spaceForConnector(){
    }
 }
     
-CON_PATTERN = "middle" ;
+
 module spacesForConnectors(){
     // draw several spaces for connectors.
-    if (CON_PATTERN == "middle"){    
+    if (CON_PATTERN == "middle_of_tray"){    
+    // echo("middle of tray");
     for ( y = [ - half_depth, half_depth]){
         translate([0,y,0])
         spaceForConnector();
@@ -150,6 +154,29 @@ module spacesForConnectors(){
         rotate([0,0,90])
         spaceForConnector();
     }
+    }
+    else if (CON_PATTERN == "middle_of_quad"){
+       // _rows, 
+        QW = (half_width*2)/_columns ; // Quad width
+        eps = 0.01;
+        %for ( y = [-half_depth, half_depth]){  
+            for ( x=[-half_width+(QW/2):QW:eps+half_width-(QW/2)]){
+            echo(x ); 
+            translate([x,y,0]) 
+            spaceForConnector();
+            }
+
+            for ( x = [ -half_width, half_width])
+                for (y = [-half_depth+(QW/2):QW:eps+half_depth-(QW/2)]  ){
+                translate([x,y,0])
+                rotate([0,0,90])
+                spaceForConnector();
+            }
+    
+        }
+    }    
+    else{
+        echo ("Hein ?");
     }
 }
 
