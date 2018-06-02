@@ -1,6 +1,9 @@
-// initial design by 
+// initial design from :
+// http://www.thingiverse.com/thing:48235
 
 // modified by Bertrand MAUBERT oct 2016 (add padding space, add optionnal connectors).
+// add code for SD Card, USB key
+
 
 // battery diameter (AA-14.5, AAA-10.6 123A-16.8 CR2-15.5)
 _diameter = 14.5;
@@ -12,7 +15,7 @@ _height = 10; // [1:80]
 _columns = 2; // [1:12]
 
 // number of battery clusters deep
-_rows = 2; // [1:12]
+_rows = 1; // [1:12]
 
 // padding between the clusters of batteries (also affects padding along the edges)
 _spacing = 1.2;
@@ -37,6 +40,11 @@ _offset = 0.2; // spacing for the connector
 // CON_PATTERN : // possible values : 
 // "middle_of_tray", "middle of quad"
 CON_PATTERN = "middle_of_tray" ; 
+
+// choose only one of type of holes.
+FOR_BATTERIES = false ;
+FOR_USB = false ; 
+FOR_USB_AND_SD = true ;
 
 half_depth = _padding + ((2 * _diameter + _spacing) * _rows + _spacing*2)/2;
 half_width = _padding + ((2 * _diameter + _spacing) * _columns + _spacing*2)/2;
@@ -84,9 +92,45 @@ module batteryQuad(diameter, height) {
 	}
 }
 
+module USBHoleMalePartOnly(depth=10){
+    width = 2.7 ;
+    length = 12.2 ;
+    translate([width/2, 0, depth/2])
+    cube([width, length,  depth], center=true);
+}
 
+module USBHole(depth=10){
+    width = 4.5+0.2 ;
+    length = 12.1+0.2;
+    translate([width/2, 0, depth/2])
+    cube([width, length,  depth], center=true);
+}
+// for USB key
+module usbHoles(){
+    delta = 9.5 ;            
+    make_group_of(3, delta){
+        USBHole();
+    }    
+}
 
+module SDHole(depth=10){
+    width = 2.2 +0.2 ;
+    length = 24.1 + 0.2 ;
+    translate([width/2, 0, depth/2])
+    cube([width, length,  depth], center=true);
+}
 
+module SDHoles(){
+    delta = 5 ;        
+    make_group_of(5, delta){
+        SDHole();
+    }    
+}
+
+module make_group_of(count, space){
+    for ( i = [0 : count-1]){
+    translate([ i * space,0,0]) children();}
+}
 
 module makeTray(diameter, height, rows, columns, spacing, base, rounding, padding) {
 	eps = 0.1;
@@ -107,8 +151,9 @@ module makeTray(diameter, height, rows, columns, spacing, base, rounding, paddin
 			translate([x,y])
 			cylinder(r=rounding, h=height);
 		}
-        // holes.
-		translate([0,0,height/2 + base]) {
+        // holes for batterie
+        if (FOR_BATTERIES){
+		  translate([0,0,height/2 + base]) {
 			for (x=[0:1:columns-1])
 			for (y=[0:1:rows-1]) {
 				translate([xstart + (quadSize + spacing)*x,
@@ -116,7 +161,40 @@ module makeTray(diameter, height, rows, columns, spacing, base, rounding, paddin
 					batteryQuad(diameter, height);
 				}
 			}
-		}
+		  }
+        }
+         if (FOR_USB){
+		  translate([0,0,height/2 + base]) {
+			for (x=[0:1:columns-1])
+			for (y=[0:1:rows-1]) {
+				translate([-11 + xstart + (quadSize + spacing)*x,
+							 -0 + ystart + (quadSize + spacing)*y,0]) {
+					usbHoles(depth);
+				}
+			}
+		  }
+        }
+          if (FOR_USB_AND_SD){
+		  translate([0,0,height/2 + base]) {
+			// for (x=[0:1:columns-1])
+            x = 0 ;
+            echo(x);   
+			for (y=[0:1:rows-1]) {
+				translate([-11 + xstart + (quadSize + spacing)*0,
+							 -0 + ystart + (quadSize + spacing)*y,0]) {
+					usbHoles(depth);
+				}
+			}
+            x = 1 ;
+            echo(x);
+            for (y=[0:1:rows-1]) {
+				translate([-11 + xstart + (quadSize + spacing)*x,
+							 -0 + ystart + (quadSize + spacing)*y,0]) {
+					SDHoles(depth);
+				}
+			}
+		  }
+        }        
         // Spaces for connectors
         if  (WITH_CONNECTOR) 
             spacesForConnectors();
@@ -139,7 +217,6 @@ module spaceForConnector(){
     connector2D();
    }
 }
-    
 
 module spacesForConnectors(){
     // draw several spaces for connectors.
