@@ -6,7 +6,9 @@
 
 
 // battery diameter (AA-14.5, AAA-10.6 123A-16.8 CR2-15.5)
-_diameter = 14.5;
+_diameter = 10.6;
+// 
+MODULE_SIZE = "8AA" ; // valeurs : "8AA","" 
 
 // height of the tray;
 _height = 10; // [1:80]
@@ -21,7 +23,7 @@ _rows = 1; // [1:12]
 _spacing = 1.2;
 
 // thickness of the base under the batteries
-_base = 0.5;
+_base = 1.2; //0.5
 
 // radius of corner rounding
 _cornerRounding = 4.0;
@@ -42,12 +44,16 @@ _offset = 0.2; // spacing for the connector
 CON_PATTERN = "middle_of_tray" ; 
 
 // choose only one of type of holes.
-FOR_BATTERIES = false ;
+FOR_BATTERIES = true ;
 FOR_USB = false ; 
-FOR_USB_AND_SD = true ;
+FOR_USB_AND_SD = false ;
 
 half_depth = _padding + ((2 * _diameter + _spacing) * _rows + _spacing*2)/2;
+echo( half_depth ); 
+// half_depth = 18.3 ; // Pour des modules de taille fixe
 half_width = _padding + ((2 * _diameter + _spacing) * _columns + _spacing*2)/2;
+echo( half_width ); 
+// half_with = 33.4 ; // Pour des modules de taille fixe
 
 module batteryQuad(diameter, height) {
 	angle = 35;
@@ -138,6 +144,17 @@ module makeTray(diameter, height, rows, columns, spacing, base, rounding, paddin
 	quadSize = 2 * diameter;
 	width = (quadSize + spacing) * columns + spacing*2;
 	depth = (quadSize + spacing) * rows + spacing*2;
+    echo (width);
+    echo (depth);
+    
+    if (MODULE_SIZE == "8AA") {
+            echo ("MODULE SIZE IS 8AA ") ;
+            width = 62.8 ; 
+            depth = 32.6 ; 
+    }   
+    echo (width);
+    echo (depth);   
+        
 	xstart = -width/2 + spacing*1.5 + quadSize/2;
 	ystart = -depth/2 + spacing*1.5 + quadSize/2;
 
