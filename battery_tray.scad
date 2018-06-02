@@ -1,4 +1,4 @@
-// initial design from :
+// Initial design is from :
 // http://www.thingiverse.com/thing:48235
 
 // modified by Bertrand MAUBERT oct 2016 (add padding space, add optionnal connectors).
@@ -7,8 +7,14 @@
 
 // battery diameter (AA-14.5, AAA-10.6 123A-16.8 CR2-15.5)
 _diameter = 10.6;
-// 
-MODULE_SIZE = "8AA" ; // valeurs : "8AA","" 
+// J'appelle module le bloc extérieur.
+// J'aime avoir des modules de taille fixe.
+// j'ai choisi la taille qui correspondait au module pour les piles AA. 
+MODULE_SIZE = "8AA" ; // valeurs : "8AA",""
+// Ne pas utilise 8AA si _diameter == 14.5 !
+
+_8AAw = 62.8 ; 
+_8AAd = 32.6 ;
 
 // height of the tray;
 _height = 10; // [1:80]
@@ -17,7 +23,7 @@ _height = 10; // [1:80]
 _columns = 2; // [1:12]
 
 // number of battery clusters deep
-_rows = 1; // [1:12]
+_rows = 1 ; // [1:12]
 
 // padding between the clusters of batteries (also affects padding along the edges)
 _spacing = 1.2;
@@ -37,7 +43,7 @@ WITH_CONNECTOR = true ;
 _con_x = 7; 
 _con_y = 2.5;
 _con_z = 10;
-_offset = 0.2; // spacing for the connector
+_offset = 0.4; // spacing for the connector hole
 
 // CON_PATTERN : // possible values : 
 // "middle_of_tray", "middle of quad"
@@ -48,10 +54,11 @@ FOR_BATTERIES = true ;
 FOR_USB = false ; 
 FOR_USB_AND_SD = false ;
 
-half_depth = _padding + ((2 * _diameter + _spacing) * _rows + _spacing*2)/2;
+
+half_depth = (MODULE_SIZE == "8AA") ? 18.3 : _padding + ((2 * _diameter + _spacing) * _rows + _spacing*2)/2;
 echo( half_depth ); 
 // half_depth = 18.3 ; // Pour des modules de taille fixe
-half_width = _padding + ((2 * _diameter + _spacing) * _columns + _spacing*2)/2;
+half_width = (MODULE_SIZE == "8AA") ? 33.4 : _padding + ((2 * _diameter + _spacing) * _columns + _spacing*2)/2;
 echo( half_width ); 
 // half_with = 33.4 ; // Pour des modules de taille fixe
 
@@ -142,21 +149,15 @@ module makeTray(diameter, height, rows, columns, spacing, base, rounding, paddin
 	eps = 0.1;
 	rounding = min(rounding, diameter/2 + spacing*2);
 	quadSize = 2 * diameter;
-	width = (quadSize + spacing) * columns + spacing*2;
-	depth = (quadSize + spacing) * rows + spacing*2;
+    
+    width =  MODULE_SIZE == "8AA" ?  _8AAw   : (quadSize + spacing) * columns + spacing*2;
+    depth =  MODULE_SIZE == "8AA" ?  _8AAd : (quadSize + spacing) * rows + spacing*2;
+
     echo (width);
     echo (depth);
-    
-    if (MODULE_SIZE == "8AA") {
-            echo ("MODULE SIZE IS 8AA ") ;
-            width = 62.8 ; 
-            depth = 32.6 ; 
-    }   
-    echo (width);
-    echo (depth);   
         
-	xstart = -width/2 + spacing*1.5 + quadSize/2;
-	ystart = -depth/2 + spacing*1.5 + quadSize/2;
+	xstart = -width/2 + spacing*1.5 + (MODULE_SIZE == "8AA" ? 8:0) + quadSize/2;
+	ystart = -depth/2 + spacing*1.5 + (MODULE_SIZE == "8AA" ? 4:0) + quadSize/2;
 
 	difference() {
         // main block
@@ -266,11 +267,10 @@ module spacesForConnectors(){
                 rotate([0,0,90])
                 spaceForConnector();
             }
-    
         }
     }    
     else{
-        echo ("Hein ?");
+        echo ("CON_PATTERN inconnu ");
     }
 }
 
